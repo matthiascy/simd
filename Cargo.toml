@@ -3,4 +3,12 @@ name = "simd"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "xmm_subi32"
+path = "src/bin/xmm_subi32.rs"
+
+[[bin]]
+name = "xmm_addi16"
+path = "src/bin/xmm_addi16.rs"
+
 [dependencies]
