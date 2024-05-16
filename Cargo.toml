@@ -15,4 +15,8 @@ path = "src/bin/xmm_addi.rs"
 name = "xmm_muli"
 path = "src/bin/xmm_muli.rs"
 
+[[bin]]
+name = "xmm_bitwise"
+path = "src/bin/xmm_bitwise.rs"
+
 [dependencies]
