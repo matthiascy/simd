@@ -19,4 +19,13 @@ path = "src/bin/xmm_muli.rs"
 name = "xmm_bitwise"
 path = "src/bin/xmm_bitwise.rs"
 
+[[bin]]
+name = "xmm_u8_min_max"
+path = "src/bin/xmm_u8_min_max.rs"
+
+[[bin]]
+name = "xmm_u8_mean"
+path = "src/bin/xmm_u8_mean.rs"
+
 [dependencies]
+rand = "0.8"
