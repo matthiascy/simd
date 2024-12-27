@@ -16,7 +16,7 @@ fn calc_mean_u8(array: &Array<u8>) -> (Option<u64>, Option<f64>) {
 fn calc_mean_u8_sse2(array: &Array<u8>) -> (Option<u64>, Option<f64>) {
     use std::arch::x86_64::{_mm_add_epi16, _mm_add_epi32, _mm_extract_epi32, _mm_load_si128, _mm_setzero_si128, _mm_unpackhi_epi16, _mm_unpackhi_epi8, _mm_unpacklo_epi16, _mm_unpacklo_epi8};
 
-    if array.is_empty() || !array.is_aligned() {
+    if array.is_empty() || !array.is_aligned(16) {
         return (None, None);
     }
     const NUM_LANE: usize = 16;
@@ -32,8 +32,8 @@ fn calc_mean_u8_sse2(array: &Array<u8>) -> (Option<u64>, Option<f64>) {
             }
 
             let mut sums_u16 = _mm_setzero_si128();
-            let mut vals_lo_u16 = _mm_setzero_si128();
-            let mut vals_hi_u16 = _mm_setzero_si128();
+            let mut vals_lo_u16;
+            let mut vals_hi_u16;
             let mut vals_u8;
 
             for j in 0..4 {
@@ -72,7 +72,7 @@ fn calc_mean_u8_sse2(array: &Array<u8>) -> (Option<u64>, Option<f64>) {
 const NUM_ELEMENTS: usize = 1_000_000;
 
 fn main() {
-    let mut array = Array::<u8>::new(NUM_ELEMENTS);
+    let mut array = Array::<u8>::new(NUM_ELEMENTS, 16);
     array.randomise(0, 255, false);
 
     thread::scope(|s| {

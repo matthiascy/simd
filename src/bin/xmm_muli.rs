@@ -86,7 +86,7 @@ fn main() {
     print!("a * b (lo):         {}", loi32.fmt_i32());
 
     // i32 v2
-    let mut out = [Xmm { int64: [0; 2] }, Xmm { int64: [0; 2] }];
+    let out = [Xmm { int64: [0; 2] }, Xmm { int64: [0; 2] }];
     let ai32_v2 = Xmm { int32: [10, 3000, -40000, 4200] };
     let bi32_v2 = Xmm { int32: [-500, 100, -120000, 1000] };
     let mut loi32_v2 = Xmm { int32: [0; 4] };

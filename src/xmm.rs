@@ -1,4 +1,4 @@
-use std::fmt;
+use crate::{fmt_as_simd, fmt_as_simd_hex};
 
 /// 128-bit wide SIMD data type.
 #[repr(C, align(16))]
@@ -13,26 +13,6 @@ pub union Xmm {
     pub uint64: [u64; 2],
     pub float32: [f32; 4],
     pub float64: [f64; 2],
-}
-
-fn fmt_as_simd<T: fmt::Display>(f: &mut String, a: &[T], n: usize, w: usize) -> fmt::Result {
-    for i in 0..a.len() {
-        fmt::write(f, format_args!("{:w$}", a[i], w = w))?;
-        if i + 1 == n / 2 {
-            fmt::write(f, format_args!("    |"))?;
-        }
-    }
-    fmt::write(f, format_args!("\n"))
-}
-
-fn fmt_as_simd_hex<T: fmt::Display + fmt::UpperHex>(f: &mut String, a: &[T], n: usize, w: usize) -> fmt::Result {
-    for i in 0..a.len() {
-        fmt::write(f, format_args!("{:#0w$X} ", a[i], w = w))?;
-        if i + 1 == n / 2 {
-            fmt::write(f, format_args!(" |  "))?;
-        }
-    }
-    fmt::write(f, format_args!("\n"))
 }
 
 impl Xmm {

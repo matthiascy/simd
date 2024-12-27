@@ -1,7 +1,7 @@
 // _mm_set1_epi[8/16/32/64]: set packed 8/16/32/64-bit integers to the same value (broadcast)
 // _mm_setzero_si128: set packed 128-bit integers to zero
 
-use std::arch::x86_64::{_mm_extract_epi8, _mm_load_si128, _mm_max_epu8, _mm_min_epu8, _mm_set1_epi8, _mm_set_epi8, _mm_setzero_si128, _mm_srli_si128};
+use std::arch::x86_64::{_mm_extract_epi8, _mm_load_si128, _mm_max_epu8, _mm_min_epu8, _mm_set1_epi8, _mm_setzero_si128, _mm_srli_si128};
 use std::thread;
 use simd::array::Array;
 
@@ -10,16 +10,16 @@ fn init_array_u8(array: &mut Array<u8>) {
 
     // use known values for min & max to verify correctness
     let n = array.len();
-    array.as_mut_slice()[(n / 4 * 3 + 1)] = 2;
-    array.as_mut_slice()[(n / 4 + 11)] = 3;
-    array.as_mut_slice()[(n / 2)] = 252;
-    array.as_mut_slice()[(n / 2 + 13)] = 253;
-    array.as_mut_slice()[(n / 8 + 5)] = 4;
-    array.as_mut_slice()[(n / 8 + 7)] = 254;
+    array.as_mut_slice()[n / 4 * 3 + 1] = 2;
+    array.as_mut_slice()[n / 4 + 11] = 3;
+    array.as_mut_slice()[n / 2] = 252;
+    array.as_mut_slice()[n / 2 + 13] = 253;
+    array.as_mut_slice()[n / 8 + 5] = 4;
+    array.as_mut_slice()[n / 8 + 7] = 254;
 }
 
 fn calc_min_max_u8(array: &Array<u8>) -> (Option<u8>, Option<u8>) {
-    if array.is_empty() || !array.is_aligned() {
+    if array.is_empty() || !array.is_aligned(16) {
         return (None, None);
     }
 
@@ -39,7 +39,7 @@ fn calc_min_max_u8(array: &Array<u8>) -> (Option<u8>, Option<u8>) {
 }
 
 fn calc_min_max_u8_sse2(array: &Array<u8>) -> (Option<u8>, Option<u8>) {
-    if array.is_empty() || !array.is_aligned() {
+    if array.is_empty() || !array.is_aligned(16) {
         return (None, None);
     }
     const NUM_LANE: usize = 16;
@@ -109,7 +109,7 @@ const NUM_ELEMENTS: usize = 10_000_000;
 fn main() {
     println!("Running benchmark min & max of u8 array with {} elements", NUM_ELEMENTS);
 
-    let mut array = Array::<u8>::new(NUM_ELEMENTS);
+    let mut array = Array::<u8>::new(NUM_ELEMENTS, 16);
     init_array_u8(&mut array);
 
     thread::scope(|s| {

@@ -27,5 +27,9 @@ path = "src/bin/xmm_u8_min_max.rs"
 name = "xmm_u8_mean"
 path = "src/bin/xmm_u8_mean.rs"
 
+[[bin]]
+name = "ymm_float"
+path = "src/bin/ymm_float.rs"
+
 [dependencies]
 rand = "0.8"

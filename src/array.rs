@@ -1,11 +1,13 @@
 use std::mem::needs_drop;
 use std::ptr::{NonNull};
 use rand::distributions::Distribution;
+use std::alloc;
 
-/// 16-byte aligned array.
+/// Allocates an array of type T with a given length and alignment.
 pub struct Array<T> {
     data: NonNull<T>,
     len: usize,
+    layout: alloc::Layout,
     _marker: std::marker::PhantomData<[T]>,
 }
 
@@ -13,19 +15,20 @@ unsafe impl<T> Send for Array<T> {}
 unsafe impl<T> Sync for Array<T> {}
 
 impl<T> Array<T> {
-    pub fn new(len: usize) -> Self {
-        let layout = std::alloc::Layout::from_size_align(std::mem::size_of::<T>() * len, 16).unwrap();
-        let data = unsafe { std::alloc::alloc(layout) };
+    pub fn new(len: usize, align: usize) -> Self {
+        let layout = alloc::Layout::from_size_align(std::mem::size_of::<T>() * len, align).unwrap();
+        let data = unsafe { alloc::alloc(layout) };
 
         Self {
             data: NonNull::new(data as *mut T).unwrap(),
             len,
+            layout,
             _marker: std::marker::PhantomData,
         }
     }
 
-    pub fn is_aligned(&self) -> bool {
-        self.data.as_ptr() as usize % 16 == 0
+    pub fn is_aligned(&self, align: usize) -> bool {
+        self.data.as_ptr() as usize % align == 0
     }
 
     pub fn len(&self) -> usize {
@@ -37,10 +40,10 @@ impl<T> Array<T> {
     }
 
     pub fn fill(&mut self, value: T)
-    where T: Copy
+    where T: Clone
     {
         for i in 0..self.len {
-            unsafe { std::ptr::write(self.data.as_ptr().add(i), value) };
+            unsafe { std::ptr::write(self.data.as_ptr().add(i), value.clone()) };
         }
     }
 
@@ -48,7 +51,7 @@ impl<T> Array<T> {
     where T: rand::distributions::uniform::SampleUniform + PartialOrd + Copy + Default
     {
         let mut rng = rand::thread_rng();
-        let mut uniform = rand::distributions::Uniform::new(min, max);
+        let uniform = rand::distributions::Uniform::new(min, max);
         for i in 0..self.len {
             let mut value = uniform.sample(&mut rng);
             if exclude_zero {
@@ -84,7 +87,43 @@ impl<T> Drop for Array<T> {
                 unsafe { std::ptr::drop_in_place(self.data.as_ptr().add(i)) };
             }
         }
-        let layout = std::alloc::Layout::from_size_align(std::mem::size_of::<T>() * self.len, 16).unwrap();
-        unsafe { std::alloc::dealloc(self.data.as_ptr() as *mut u8, layout) };
+        unsafe { alloc::dealloc(self.data.as_ptr() as *mut u8, self.layout) };
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_array_copyable_element_dropping() {
+        let mut array = Array::<u8>::new(16, 16);
+        array.fill(0);
+        assert_eq!(array.as_slice(), &[0; 16]);
+
+        array.randomise(0, 255, false);
+        let slice = array.as_slice();
+    }
+
+    #[test]
+    fn test_array_cloneable_element_dropping() {
+        let mut array = Array::<String>::new(16, 16);
+        array.fill("a".to_string());
+
+        let slice = array.as_slice();
+        for val in slice {
+            assert_eq!(val, "a");
+        }
+    }
+
+    #[test]
+    fn test_array_referenced_element_dropping() {
+        let mut array = Array::<String>::new(16, 16);
+        array.fill("a".to_string());
+
+        let slice = array.as_slice();
+        for val in slice {
+            assert_eq!(val, "a");
+        }
     }
 }
